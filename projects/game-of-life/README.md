@@ -15,7 +15,7 @@ The Game of Life is played on an infinite two-dimensional grid of cells, each of
 
 These simple rules give rise to a variety of patterns and behaviors, making the Game of Life a fascinating area of study.
 
-## Code Structure :laptop:
+## Code Structure
 
 The code for Conway's Game of Life is implemented in C++ and structured as follows:
 
@@ -23,12 +23,26 @@ The code for Conway's Game of Life is implemented in C++ and structured as follo
 
 - **GameBoard**: A class that represents the game board, which is a 2D grid of cells. It has methods to initialize the board, calculate the next generation, and display the current state of the board.
 
-## Installation :gear:
+## Build :gear:
 
 To run the Game of Life code, you'll need a C++ compiler such as g++. You can compile the code using the following command:
 
+First `cd` into the game-of-life directory.
+
 ```bash
-g++ game_of_life.cpp -o game_of_life
+cd /projects/game-of-life
+```
+
+Then compile the project.
+
+```bash
+g++ game_of_life.cpp -o build/game_of_life
+```
+
+Or using make command:
+
+```bash
+make compile
 ```
 
 ## Running the Code
@@ -36,9 +50,14 @@ g++ game_of_life.cpp -o game_of_life
 After compiling the code, you can run the Game of Life simulation using the following command:
 
 ```bash
-./game_of_life
+./build/game_of_life
 ```
 
+Or using make command:
+
+```bash
+make run
+```
 
 This will start the simulation, and you can watch how the cells evolve from one generation to the next based on the rules of the game.
 
