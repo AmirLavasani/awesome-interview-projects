@@ -12,22 +12,27 @@
 
 using namespace std;
 
+// Enumeration to represent cell states
 enum State { ALIVE = true, DEAD = false };
 
 
 class Cell {
     public:
+        // Constructor with default values
         Cell(int x = 0, int y = 0, State state = DEAD) : x(x), y(y), state(state) {}
 
+        // Getter methods
         int getX() const { return x; }
         int getY() const { return y; }
 
-
+        // Check if the cell is alive
         bool isAlive() const {
             return (state == ALIVE) ? true : false;
         }
 
+        // Calculate the next state of the cell based on its neighbors
         void calculateNextState(const std::vector<Cell>& neighbors) {
+            // Rules of the Game of Life:
             // 1. Any live cell with fewer than two live neighbours dies, as if by loneliness.
             // 2. Any live cell with more than three live neighbours dies, as if by overcrowding.
             // 3. Any live cell with two or three live neighbours lives, unchanged, to the next generation.
@@ -50,6 +55,7 @@ class Cell {
             }
         }
 
+        // Update the state of the cell with its next state
         void updateState() {
             state = nextState;
         }
@@ -64,6 +70,7 @@ class Cell {
             }
         }
 
+        // Revive the cell to the ALIVE state
         void revive() {
             state = ALIVE;
         }
@@ -73,21 +80,18 @@ class Cell {
         int y;
         bool state;
         bool nextState;
-
-
-        // void setX(int value) { x = value; }
-        // void setY(int value) { y = value; }
-        // void setState(State value) { state = value; }
 };
 
 
 class gameBoard {
     public:
+         // Constructor with default board size
         gameBoard(int boardSize = 10) : boardSize(boardSize) {
             // Initialize the 2D vector with default Cell values
             board.resize(boardSize, std::vector<Cell>(boardSize));
         }
 
+        // Initialize the board with a list of initial alive cells
         void initialize(const std::vector<std::pair<int, int>>& aliveCells) {
             for (const auto& coords : aliveCells) {
                 int x = coords.first;
@@ -100,7 +104,15 @@ class gameBoard {
             }
         }
 
+        // Display the current state of the board
         void display() const {
+            // Clear the terminal screen (platform-specific)
+            #ifdef _WIN32
+            system("cls");
+            #else
+            system("clear");
+            #endif
+
             for (int i = 0; i < boardSize; i++) {
                 for (int j = 0; j < boardSize; j++) {
                     if (board[i][j].isAlive()) {
@@ -113,6 +125,7 @@ class gameBoard {
             }
         }
 
+        // Calculate the next generation of the board
         void tick() {
             // Loop over all cells and calculate the next state
             for (int i = 0; i < boardSize; i++) {
@@ -158,8 +171,9 @@ class gameBoard {
         }
 };
 
-// Function to shift points to the center
-void shiftToCenter(vector<pair<int, int>>& points, int shiftAmount) {
+// Function to shift initialize pattern to the center
+void shiftToCenter(vector<pair<int, int>>& points, int boardSize) {
+    int shiftAmount = boardSize / 2 - 1;
     for (auto& point : points) {
         point.first += shiftAmount;
         point.second += shiftAmount;
@@ -170,31 +184,23 @@ int main() {
     int boardSize = 30; // You can change the board size as needed
     gameBoard board(boardSize);
 
-    // Define the initial ALIVE cells - Start Pattern
+    // Define the initial ALIVE cells - Star Pattern
     // std::vector<std::pair<int, int>> initialAliveCells = {
     //     {5, 5}, {4, 5}, {6, 5}, {4, 4}, {4, 6}
     // };
 
-    // R-Pentomino
+    // R-Pentomino Pattern
     std::vector<std::pair<int, int>> initialAliveCells = {
         {0, 0}, {0, -1}, {0, 1}, {-1, 0}, {1, -1}
     };
 
     // Shift the initial alive cells to the center
-    int shiftAmount = boardSize / 2 - 1;
-    shiftToCenter(initialAliveCells, shiftAmount);
+    shiftToCenter(initialAliveCells, boardSize);
 
     // Initialize the board with the initial ALIVE cells
     board.initialize(initialAliveCells);
 
     while (true) {
-        // Clear the terminal screen (platform-specific)
-        #ifdef _WIN32
-        system("cls");
-        #else
-        system("clear");
-        #endif
-
         // Display the current state of the board
         board.display();
 
