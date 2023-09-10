@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <csignal> // For signal handling
 
 #include <thread>  // For sleep_for
 #include <chrono>  // For milliseconds
@@ -171,34 +172,190 @@ class gameBoard {
         }
 };
 
-// Function to shift initialize pattern to the center
-void shiftToCenter(vector<pair<int, int>>& points, int boardSize) {
-    int shiftAmount = boardSize / 2 - 1;
-    for (auto& point : points) {
-        point.first += shiftAmount;
-        point.second += shiftAmount;
-    }
+class Config {
+    public:
+        int boardSize;
+        
+        bool useDefaultPatterns;
+        
+        enum DefaultInitialPattern { 
+            START_PATTERN,
+            RPENTOMINO_PATTERN
+        } defaultInitialPattern;
+
+        int numInitialAliveCells;
+        
+        std::vector<std::pair<int, int>> initialAliveCells;
+      
+        bool shiftToCenter;
+
+        Config() {
+            // Default configurations
+            boardSize = 20;
+
+            useDefaultPatterns = true;
+            
+            defaultInitialPattern = START_PATTERN;
+
+            numInitialAliveCells = 0;  // Default is using default patterns
+
+            shiftToCenter = true;            
+        }
+
+        void initializeConfig() {
+            // Print a brief explanation of the Game of Life
+            cout << "Welcome to the Game of Life!" << endl;
+            cout << "The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970." << endl;
+            cout << "It is a zero-player game, meaning that its evolution is determined by its initial state, requiring no further input." << endl;
+            cout << "One interacts with the Game of Life by creating an initial configuration and observing how it evolves." << endl;
+            cout << "The rules of the game are simple but can result in complex patterns." << endl;
+            cout << "Each cell on the board can be either alive ('*') or dead ('.')." << endl;
+            cout << "The next generation of cells is determined by the following rules:" << endl;
+            cout << "1. Any live cell with fewer than two live neighbours dies, as if by loneliness." << endl;
+            cout << "2. Any live cell with more than three live neighbours dies, as if by overcrowding." << endl;
+            cout << "3. Any live cell with two or three live neighbours lives, unchanged, to the next generation." << endl;
+            cout << "4. Any dead cell with exactly three live neighbours comes to life." << endl;
+            cout << "Let's configure your Game of Life!" << endl;
+
+            // Get user input for configuration
+            setBoardSize();
+
+            setUseDefaultPatterns();
+            
+            if (useDefaultPatterns) {
+                setDefaultInitialPattern();
+            }
+            else {
+                setCustomInitialPattern();
+            }
+            
+            setShiftToCenter();
+
+            // Print the current configuration
+            printConfig();
+        }
+
+        // Set board size from user input
+        void setBoardSize() {
+            cout << "Enter board size (default is 20): ";
+            string input;
+            getline(cin, input);
+            if (!input.empty()) {
+                boardSize = stoi(input);
+            }
+        }
+
+        // Set whether to shift the pattern to the center
+        void setUseDefaultPatterns() {
+            string choice;
+            cout << "Choose from default initial patterns? (Y/N, default is Y): ";
+            getline(cin, choice);
+            useDefaultPatterns = (choice == "Y" || choice == "y" || choice.empty());
+        }
+
+        // Set the initial pattern from user input
+        void setDefaultInitialPattern() {
+            string input;
+            int choice;
+            cout << 
+                "Choose an initial pattern (0: Start Pattern, 1: R-Pentomino Pattern) (default is Star Pattern): ";
+            getline(cin, input);
+            if (input.empty()) {
+                choice = 0; // Set to default star pattern if Enter is pressed
+            } else {
+                choice = stoi(input);
+            }
+
+            defaultInitialPattern = static_cast<DefaultInitialPattern>(choice);
+
+            // TODO: use case switch
+            if (defaultInitialPattern == Config::START_PATTERN) {
+                initialAliveCells = {
+                    {0, 0}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}
+                };
+            } else if (defaultInitialPattern == Config::RPENTOMINO_PATTERN) {
+                initialAliveCells = {
+                    {0, 0}, {0, -1}, {0, 1}, {-1, 0}, {1, -1}
+                };
+            }
+        }
+
+
+        // Set the custom number of initial alive cells and the pattern from user input
+        void setCustomInitialPattern() {
+            cout << "Enter the number of custom initial alive cells: ";
+            cin >> numInitialAliveCells;
+            if (numInitialAliveCells > 0) {
+                initialAliveCells.reserve(numInitialAliveCells);
+                cout << "Enter " << numInitialAliveCells << " initial alive cell coordinates (x y):" << endl;
+                for (int i = 0; i < numInitialAliveCells; i++) {
+                    int x, y;
+                    cin >> x >> y;
+                    initialAliveCells.push_back({x, y});
+                }
+            }
+        }
+
+        // Set whether to shift the pattern to the center
+        void setShiftToCenter() {
+            string choice;
+            cout << "Shift the pattern to the center (Y/N, default is Y): ";
+            getline(cin, choice);
+            shiftToCenter = (choice == "Y" || choice == "y" || choice.empty());
+
+            if (shiftToCenter) {
+                int shiftAmount = boardSize / 2 - 1;
+                for (auto& point : initialAliveCells) {
+                    point.first += shiftAmount;
+                    point.second += shiftAmount;
+                }
+            }
+        }
+
+        // Print the current configuration
+        void printConfig() {
+            cout << "Current Configuration:" << endl;
+            cout << "Board Size: " << boardSize << endl;
+            if (useDefaultPatterns) {
+                cout << "Default Initial Pattern: " << (defaultInitialPattern == START_PATTERN ? "Start Pattern" : "R-Pentomino") << endl;
+            }
+            else {
+                cout << "Number of Custom Initial Alive Cells: " << numInitialAliveCells << endl;                
+            }
+
+            cout << "Initial Alive Cells: ";
+            for (const auto& cell : initialAliveCells) {
+                cout << "(" << cell.first << ", " << cell.second << ") " << endl;
+            }
+            
+            cout << "Shift to Center: " << (shiftToCenter ? "Yes" : "No") << endl;
+            cout << endl;
+            for (int i=3; i > 0; i--) {
+                cout << "Starting the Game of Life in " << i << " seconds... " << endl;
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }        
+};
+
+// Function to handle the SIGINT signal (Ctrl + C)
+void handleInterruptSignal(int signal) {
+    cout << "\nGracefully shutting down the Game of Life..." << endl;
+    exit(0);
 }
 
 int main() {
-    int boardSize = 30; // You can change the board size as needed
-    gameBoard board(boardSize);
 
-    // Define the initial ALIVE cells - Star Pattern
-    // std::vector<std::pair<int, int>> initialAliveCells = {
-    //     {5, 5}, {4, 5}, {6, 5}, {4, 4}, {4, 6}
-    // };
+    // Set up a signal handler for SIGINT (Ctrl + C)
+    signal(SIGINT, handleInterruptSignal);
 
-    // R-Pentomino Pattern
-    std::vector<std::pair<int, int>> initialAliveCells = {
-        {0, 0}, {0, -1}, {0, 1}, {-1, 0}, {1, -1}
-    };
+    Config config;
 
-    // Shift the initial alive cells to the center
-    shiftToCenter(initialAliveCells, boardSize);
+    config.initializeConfig();
+
+    gameBoard board(config.boardSize);
 
     // Initialize the board with the initial ALIVE cells
-    board.initialize(initialAliveCells);
+    board.initialize(config.initialAliveCells);
 
     while (true) {
         // Display the current state of the board
